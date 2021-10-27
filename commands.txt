@@ -1,0 +1,39 @@
+kubectl create ns rabbits
+
+kubectl get storageclass  (hostpath)
+
+Deploy:
+cd C:\Kubernetes\Kuberneties-RabbitMQ\kubernetes
+kubectl apply -n rabbits -f rabbit-rbac.yaml
+kubectl apply -n rabbits -f rabbit-configmap.yaml
+kubectl apply -n rabbits -f rabbit-secret.yaml
+kubectl apply -n rabbits -f rabbit-statefulset.yaml
+
+
+kubectl get all -n rabbits
+kubectl describe pod/rabbitmq-0 -n rabbits
+
+Access the UI:
+kubectl -n rabbits port-forward rabbitmq-0 8080:15672
+
+Go to http://localhost:8080
+Username: guest
+Password: guest
+
+Message Publisher:
+cd messaging\rabbitmq\applications\publisher
+docker build . -t aimvector/rabbitmq-publisher:v1.0.0
+kubectl apply -f rabbits deployment.yaml
+
+
+Automatic Synchronization:
+https://www.rabbitmq.com/ha.html#unsynchronised-mirrors
+rabbitmqctl set_policy ha-fed \
+    ".*" '{"federation-upstream-set":"all", "ha-sync-mode":"automatic", "ha-mode":"nodes", "ha-params":["rabbit@rabbitmq-0.rabbitmq.rabbits.svc.cluster.local","rabbit@rabbitmq-1.rabbitmq.rabbits.svc.cluster.local","rabbit@rabbitmq-2.rabbitmq.rabbits.svc.cluster.local"]}' \
+    --priority 1 \
+    --apply-to queues
+
+
+
+ kubectl delete statefulset rabbitmq   
+
